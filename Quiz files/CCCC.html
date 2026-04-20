@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/x-icon" href="../images/icon.png">
+<title>Quiz Application</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to right, #6a11cb, #2575fc);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; 
+    margin: 0;
+}
+
+
+.quiz-container {
+    background: #fff;
+    width: 500px;
+    max-width: 90%; 
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+
+h2 {
+    margin-bottom: 15px;
+    font-size: 1.5rem;
+}
+
+.options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+
+.buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+button {
+    width: 48%;
+    padding: 10px;
+    background: #007bff;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    margin-top: 15px;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+
+#score {
+    text-align: center;
+    font-size: 18px;
+}
+
+/* ========================= */
+/* 📱 Mobile View (≤ 600px) */
+/* ========================= */
+@media (max-width: 600px) {
+    .quiz-container {
+        width: 80%;
+        padding: 15px;
+        border-radius: 6px;
+    }
+
+    h2 {
+        font-size: 1.2rem;
+    }
+
+    .options-grid {
+        grid-template-columns: 1fr; 
+    }
+
+    button {
+        width: 50%;
+        font-size: 0.9rem;
+    }
+
+    .buttons {
+        flex-direction: row;
+    }
+}
+
+/* ========================= */
+/* 📲 Tablet View (601px–1024px) */
+/* ========================= */
+@media (min-width: 601px) and (max-width: 1024px) {
+    .quiz-container {
+        width: 400px;
+    }
+
+    h2 {
+        font-size: 1.4rem;
+    }
+
+    .options-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    button {
+        font-size: 1rem;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="quiz-container">
+    <h2 id="question">Question</h2>
+
+    <div class="options-grid">
+        <div class="option">
+            <input type="radio" name="answer" id="a">
+            <label for="a" id="a_text"></label>
+        </div>
+        <div class="option">
+            <input type="radio" name="answer" id="b">
+            <label for="b" id="b_text"></label>
+        </div>
+        <div class="option">
+            <input type="radio" name="answer" id="c">
+            <label for="c" id="c_text"></label>
+        </div>
+        <div class="option">
+            <input type="radio" name="answer" id="d">
+            <label for="d" id="d_text"></label>
+        </div>
+    </div>
+
+    <div class="buttons">
+        <button onclick="prevQuestion()">Previous</button>
+        <button onclick="nextQuestion()">Next</button>
+    </div>
+
+    <button style="width:100%" onclick="submitQuiz()">Submit</button>
+</div>
+
+<script>
+const quizData = [
+    {
+        question: "Who developed C++?",
+        a: "Dennis Ritchie",
+        b: "Bjarne Stroustrup",
+        c: "James Gosling",
+        d: "Guido van Rossum",
+        correct: "b"
+    },
+    {
+        question: "Which extension is used for C++ files?",
+        a: ".c",
+        b: ".java",
+        c: ".cpp",
+        d: ".py",
+        correct: "c"
+    },
+    {
+        question: "Which concept allows reusability in C++?",
+        a: "Polymorphism",
+        b: "Encapsulation",
+        c: "Inheritance",
+        d: "Abstraction",
+        correct: "c"
+    },
+    {
+        question: "Which operator is used to access class members?",
+        a: ".",
+        b: "->",
+        c: "::",
+        d: ":",
+        correct: "a"
+    },
+    {
+        question: "Which keyword is used to define a class?",
+        a: "struct",
+        b: "class",
+        c: "define",
+        d: "object",
+        correct: "b"
+    },
+    {
+        question: "Which function is the entry point of a C++ program?",
+        a: "start()",
+        b: "main()",
+        c: "run()",
+        d: "init()",
+        correct: "b"
+    },
+    {
+        question: "Which keyword is used to create an object?",
+        a: "object",
+        b: "new",
+        c: "class",
+        d: "malloc",
+        correct: "b"
+    },
+    {
+        question: "Which header file is used for input/output?",
+        a: "<stdio.h>",
+        b: "<conio.h>",
+        c: "<iostream>",
+        d: "<stdlib.h>",
+        correct: "c"
+    },
+    {
+        question: "Which symbol is used for single-line comments in C++?",
+        a: "#",
+        b: "//",
+        c: "/* */",
+        d: "<!-- -->",
+        correct: "b"
+    },
+    {
+        question: "Which feature allows function overloading?",
+        a: "Inheritance",
+        b: "Encapsulation",
+        c: "Polymorphism",
+        d: "Abstraction",
+        correct: "c"
+    }
+];
+
+let currentQuiz = 0;
+let answersStore = [];
+let score = 0;
+
+const questionEl = document.getElementById("question");
+const a_text = document.getElementById("a_text");
+const b_text = document.getElementById("b_text");
+const c_text = document.getElementById("c_text");
+const d_text = document.getElementById("d_text");
+const answers = document.querySelectorAll('input[name="answer"]');
+
+loadQuiz();
+
+function loadQuiz() {
+    deselectAnswers();
+    const data = quizData[currentQuiz];
+
+    questionEl.innerText = data.question;
+    a_text.innerText = data.a;
+    b_text.innerText = data.b;
+    c_text.innerText = data.c;
+    d_text.innerText = data.d;
+
+    if (answersStore[currentQuiz]) {
+        document.getElementById(answersStore[currentQuiz]).checked = true;
+    }
+}
+
+function getSelected() {
+    let answer;
+    answers.forEach(ans => {
+        if (ans.checked) answer = ans.id;
+    });
+    return answer;
+}
+
+function deselectAnswers() {
+    answers.forEach(ans => ans.checked = false);
+}
+
+function nextQuestion() {
+    answersStore[currentQuiz] = getSelected();
+    if (currentQuiz < quizData.length - 1) {
+        currentQuiz++;
+        loadQuiz();
+    }
+}
+
+function prevQuestion() {
+    answersStore[currentQuiz] = getSelected();
+    if (currentQuiz > 0) {
+        currentQuiz--;
+        loadQuiz();
+    }
+}
+
+function submitQuiz() {
+    answersStore[currentQuiz] = getSelected();
+
+    score = 0;
+    answersStore.forEach((ans, index) => {
+        if (ans === quizData[index].correct) {
+            score++;
+        }
+    });
+
+    document.querySelector(".quiz-container").innerHTML = `
+        <h2 id="score">You scored ${score} / ${quizData.length}</h2>
+        <div class="buttons">
+            <button onclick="location.reload()">Restart</button>
+            <button onclick="doneQuiz()">Done</button>
+        </div>
+    `;
+}
+
+function doneQuiz() {
+    alert("Quiz completed successfully!");
+    window.location.href = "home.html"; 
+}
+</script>
+
+</body>
+</html>
